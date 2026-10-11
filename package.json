@@ -1,0 +1,17 @@
+{
+  "name": "meo-mao-plush",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-assets.mjs",
+    "dev": "npm run build && wrangler dev --port 8765",
+    "db:local": "wrangler d1 execute DB --local --file schema.sql",
+    "db:remote": "wrangler d1 execute DB --remote --file schema.sql",
+    "deploy": "npm run build && wrangler deploy",
+    "test": "node check-messages.mjs",
+    "test:quattro-zampe": "node check-quattro-zampe.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.148.0"
+  }
+}
