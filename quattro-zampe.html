@@ -431,17 +431,17 @@ function drawCat(cat){
  let tail=nodes.slice(8).map(n=>n.p),tailSamples=cat.animatedTail||sampleTail(tail);
  let tube=tubeMesh(tailSamples),tailLength=tubeFrames(tailSamples).at(-1).arc/1.8,tailUV=[0,0,0,tailLength];device.queue.writeBuffer(meshes['tail'+id].vb,0,tube.vertices);add('tail'+id,I(),main,patch,[2,3,id,1],[0,0,0,0],tailUV);let tailCoat=tailFurMesh(tailSamples);device.queue.writeBuffer(meshes['tailFur'+id].vb,0,tailCoat.vertices);add('tailFur'+id,I(),main,patch,[9,3,id,1],[0,0,0,0],tailUV);
  for(let i=8;i<nodes.length;i++)pickables.push({cat:id,node:i,part:'tail',mesh:'sphere',m:model(nodes[i].p,[.13,.13,.13])});
- // Small glossy button eyes. Eyelids are real geometry; the embroidery replaces the eyes during a kiss.
+ // Compress the button eyes smoothly; draw closed-eye embroidery only once fully shut.
  let blinkTime=simTime-cat.blinkStart,blink=blinkTime>=0&&blinkTime<.23?Math.sin(blinkTime/.23*Math.PI):0;
  let kissing=kiss?smooth(clamp(kiss.t/.45,0,1))*(1-smooth(clamp((kiss.t-2.70)/.70,0,1))):0;
- let closed=Math.max(blink,kissing,cat.pet*.96),open=(c.expression==='sleepy'?.47:1)*(1-closed);
+ let closed=Math.max(blink,kissing,cat.pet*.96),open=(c.expression==='sleepy'?.47:1)*(1-closed),eyeVisible=closed<.94;
  for(let side of [-1,1]){let ex=side*.278,ey=c.expression==='curious'&&side===1?.035:0,eyePos=hp([ex,ey,.590]);
-  if(open>.25&&closed<.45){sphere(eyePos,[.112*hs,.143*hs*open,.052*hs],V.lerp(eye,color('#16191a'),.70),3,faceYaw,headRoll);
+  if(eyeVisible){sphere(eyePos,[.112*hs,.143*hs*open,.052*hs],V.lerp(eye,color('#16191a'),.70),3,faceYaw,headRoll);
    sphere(hp([ex-.027,ey+.046*open,.640]),[.023*hs,.025*hs*open,.009*hs],color('#fffdf4'),3,faceYaw,headRoll);
    sphere(hp([ex+.030,ey-.030*open,.638]),[.008*hs,.009*hs*open,.005*hs],color('#eee6dc'),3,faceYaw,headRoll);
   }
-  if(closed>.06||c.expression==='sleepy'){let points=Array.from({length:10},(_,j)=>{let t=j/9,x=ex+(t-.5)*.23,y=ey-.035+Math.sin(t*Math.PI)*(-.042),z=.625*Math.sqrt(Math.max(.01,1-(x/.79)**2-(y/.68)**2))+.012+(fabric===0?.018:0);return hp([x,y,z])});curve(points,.007*hs,thread);}
-  if(id===1&&closed<.45)segment(hp([ex+side*.10,ey+.073,.595]),hp([ex+side*.148,ey+.097,.585]),.006*hs,thread);
+  else {let points=Array.from({length:10},(_,j)=>{let t=j/9,x=ex+(t-.5)*.23,y=ey-.035+Math.sin(t*Math.PI)*(-.042),z=.625*Math.sqrt(Math.max(.01,1-(x/.79)**2-(y/.68)**2))+.012+(fabric===0?.018:0);return hp([x,y,z])});curve(points,.007*hs,thread);}
+  if(id===1&&eyeVisible)segment(hp([ex+side*.10,ey+.073,.595]),hp([ex+side*.148,ey+.097,.585]),.006*hs,thread);
   // Blush is a separate velvety fabric appliqué, with a brighter kiss glow.
   sphere(hp([side*.39,-.185,.524]),[.113*hs*(1+kissing*.25),.058*hs,.022*hs],V.lerp(main,pink,.48+kissing*.40),1,faceYaw,headRoll+side*.14);
 

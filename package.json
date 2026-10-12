@@ -10,7 +10,7 @@
     "deploy": "npm run build && wrangler deploy",
     "test": "node check-messages.mjs",
     "test:online": "node check-online.mjs",
-    "test:quattro-zampe": "node check-quattro-zampe.mjs"
+    "test:quattro-zampe": "node check-eyes.mjs && node check-quattro-zampe.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.148.0"
