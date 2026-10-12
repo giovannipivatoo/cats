@@ -133,6 +133,31 @@ try {
   inbox=await (await call('/api/messages?as=mao')).json();
   assert.equal(inbox.unread,1,'Reading one speech bubble leaves the next one unread');
   assert.equal(inbox.messages.find(m=>m.id===nextCloud.id).readAt,null);
+  // Exercise the real bubble and read handler with a newest-first API response.
+  // FIFO must be a client invariant, not depend on transport array order.
+  const fifoMessages=[nextCloud];
+  for(const text of ['FIFO secondo','FIFO terzo'])fifoMessages.push((await (await call('/api/messages',send('meo',text))).json()).message);
+  const elements=new Map();
+  const element=id=>{if(!elements.has(id))elements.set(id,{hidden:false,dataset:{},textContent:'',scrollTop:0});return elements.get(id)};
+  const bubbleClient=new Function('api','el',`
+    let person='mao',letters=[],generation=0,fetching=null,reading=null;
+    const names={meo:'Meo',mao:'Mao'},cloud=el('mail-cloud'),welcome={open:false},panel={open:false},document={hidden:false};
+    const status=()=>{},renderMail=()=>renderCloud();
+    ${html.slice(html.indexOf('function renderCloud()'),html.indexOf('function renderMail('))}
+    ${html.slice(html.indexOf('async function markRead('),html.indexOf('function openMail('))}
+    ${html.slice(html.indexOf('async function loadMail('),html.indexOf('function choosePerson('))}
+    return {loadMail,markRead};
+  `)(async(path,data)=>{const result=await (await call(path,data)).json();if(result.messages)result.messages.reverse();return result},element);
+  await bubbleClient.loadMail();
+  for(const message of fifoMessages){
+    assert.equal(element('mail-cloud').dataset.message,String(message.id),'Bubble shows oldest unread message first even when responses are reversed');
+    assert.equal(element('cloud-text').textContent,message.text);
+    await bubbleClient.markRead(message.id);
+    const remaining=(await (await call('/api/messages?as=mao')).json()).messages.filter(m=>m.to==='mao'&&!m.readAt);
+    assert.deepEqual(remaining.map(m=>m.id),fifoMessages.filter(m=>m.id>message.id).map(m=>m.id),'Next acknowledges only the displayed FIFO item');
+    await bubbleClient.loadMail();
+  }
+  assert(element('mail-cloud').hidden,'Bubble disappears after the last unread message');
   assert.equal((await call('/api/messages',send('meo','   '))).status,400);
   assert.equal((await call('/api/messages',send('meo','x'.repeat(2001)))).status,400);
   assert.equal((await call('/api/messages',send('other','Hello'))).status,400);
