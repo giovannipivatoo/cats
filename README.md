@@ -32,6 +32,8 @@ All'ingresso si sceglie Meo o Mao. I messaggi nuovi compaiono in una nuvoletta s
 il gatto che li ha scritti. «Prossimo» o «Letto» conferma solo il messaggio mostrato;
 «Rispondi» apre la conversazione completa.
 Le risposte, lo stato di lettura e le bozze sono gestiti dall'interfaccia.
+I nuovi messaggi vengono cercati ogni 3 secondi mentre la pagina è visibile,
+e subito quando torna la connessione o si riattiva la finestra.
 La scelta del gatto è un'identità dichiarata, non un accesso con password.
 
 ## Anteprima locale
@@ -46,6 +48,9 @@ Aprire http://127.0.0.1:8765/index.html. Il database locale resta in `.wrangler/
 `npm test` controlla messaggi, personalizzazioni, persistenza dopo un riavvio,
 ricevute di lettura, modifiche concorrenti e la vera coda di salvataggio dell’editor,
 con un database temporaneo. Il test della scena verifica anche reazione e recupero dopo le carezze.
+`npm run test:online` verifica entrambe le pagine pubbliche, le caselle online e
+i permessi CORS, senza inviare messaggi né modificare le ricevute reali.
+GitHub Actions esegue i test prima di pubblicare e il controllo online dopo il deploy.
 
 ## Cloudflare
 

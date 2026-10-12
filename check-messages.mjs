@@ -23,6 +23,22 @@ try {
   assert.equal(cors.headers.get('Access-Control-Allow-Origin'),origin);
   await db.prepare('DELETE FROM messages').run();
   const html=await readFile('quattro-zampe.html','utf8');
+  // Execute the actual refresh hooks, including their hidden/sending guards.
+  const hooks=new Map();let poll,loads=0;
+  const refresh=new Function('window','document','setInterval','loadMail',`
+    let person='mao',welcome={open:false},sending=false;
+    ${html.slice(html.indexOf('function refreshMail()'),html.indexOf('welcome.showModal();\n</script>'))}
+    return {setPerson:value=>person=value,setWelcome:value=>welcome.open=value,setSending:value=>sending=value};
+  `)({addEventListener:(name,callback)=>hooks.set(name,callback)},
+    {get hidden(){return hidden}},(callback,delay)=>{assert.equal(delay,3000);poll=callback},()=>{loads++});
+  let hidden=false;
+  hooks.get('online')();hooks.get('focus')();poll();
+  assert.equal(loads,3,'Reconnect, focus and polling all fetch new messages');
+  hidden=true;poll();hidden=false;
+  refresh.setSending(true);hooks.get('online')();refresh.setSending(false);
+  refresh.setWelcome(true);poll();refresh.setWelcome(false);
+  refresh.setPerson(null);poll();
+  assert.equal(loads,3,'No background requests while hidden, sending or choosing identity');
   const defaults=new Function('return '+html.match(/const defaults=(\[[^\n]+\]);/)[1])();
   assert.equal((await (await call('/api/customizations')).json()).customizations.length,0);
   const initial=(await (await call('/api/customizations',{cat:'meo',config:defaults[0],revision:0})).json()).customization;

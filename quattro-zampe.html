@@ -47,7 +47,7 @@ label.field{display:block;margin-bottom:16px;font-size:11px;color:var(--muted)}.
 <div class="loading" id="loading"><span>Caricamento…</span></div>
 <div class="compatibility" id="compatibility" hidden><div class="compatibility-inner"><svg viewBox="0 0 70 70" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m18 25-3-15 15 9h10l15-9-3 15c10 12 2 30-17 30S8 37 18 25Z"/><path d="M23 34q4-5 8 0m8 0q4-5 8 0M30 42l5 3 5-3M7 40l12 2m44-2-12 2" stroke-linecap="round"/></svg><h2>La scena 3D non è disponibile</h2><p id="compatibility-text">Serve un browser con supporto WebGPU e accelerazione hardware attiva.</p><button class="pill" onclick="location.reload()">Riprova</button></div></div>
 <script type="module" id="mailbox-code">
-// This mailbox runs independently of WebGPU. Only same-origin requests are used.
+// This mailbox runs independently of WebGPU; the Pages build points it at Cloudflare.
 const el=id=>document.getElementById(id),names={meo:'Meo',mao:'Mao'},welcome=el('identity-dialog'),panel=el('mail-dialog'),history=el('mail-history'),field=el('mail-text'),cloud=el('mail-cloud');
 let person=null,letters=[],generation=0,fetching=null,reading=null,sending=false,pending=null,signature='';
 const dateFormat=new Intl.DateTimeFormat('it-IT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -75,7 +75,10 @@ el('cloud-reply').addEventListener('click',()=>{openMail();loadMail();});el('clo
 field.addEventListener('input',()=>{if(pending&&pending.text!==field.value.trim())pending=null;keepDraft();controls();});
 el('mail-form').addEventListener('submit',async event=>{event.preventDefault();if(sending||!person||!field.value.trim())return;const who=person,text=field.value.trim();if(!pending||pending.text!==text)pending={id:crypto.randomUUID(),text};keepDraft();sending=true;generation++;controls();status('Invio…');try{const data=await api('/api/messages',{as:who,text,clientId:pending.id});if(person===who){field.value='';pending=null;keepDraft();if(!letters.some(m=>m.id===data.message.id))letters.push(data.message);letters.sort((a,b)=>a.id-b.id);renderMail(true);status('Messaggio inviato');generation++;loadMail();}}catch{status('Invio non riuscito. Il testo resta salvato: riprova.',true);}finally{sending=false;controls();}});
 panel.addEventListener('close',()=>{keepDraft();renderCloud();});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&person&&!welcome.open)loadMail();});
-setInterval(()=>{if(person&&!document.hidden&&!welcome.open&&!sending)loadMail();},10000);
+function refreshMail(){if(person&&!document.hidden&&!welcome.open&&!sending)return loadMail();}
+window.addEventListener('online',refreshMail);
+window.addEventListener('focus',refreshMail);
+setInterval(refreshMail,3000);
 welcome.showModal();
 </script>
 <script type="module">

@@ -9,6 +9,7 @@
     "db:remote": "wrangler d1 execute DB --remote --file schema.sql",
     "deploy": "npm run build && wrangler deploy",
     "test": "node check-messages.mjs",
+    "test:online": "node check-online.mjs",
     "test:quattro-zampe": "node check-quattro-zampe.mjs"
   },
   "devDependencies": {
