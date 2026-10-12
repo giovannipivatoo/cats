@@ -10,6 +10,8 @@ for(const path of ['', 'quattro-zampe.html']) {
   const html=await page.text();
   assert(html.includes(`fetch('${backend}'+path,`),'Published mailbox must use the shared API');
   assert(html.includes(`fetch('${backend}/api/customizations',`));
+  const connect=html.match(/connect-src ([^;"]+)/)?.[1].split(/\s+/);
+  assert(connect?.includes(backend),'Published CSP must allow the shared API');
 }
 for(const person of ['meo','mao']) {
   const response=await request(`${backend}/api/messages?as=${person}`,{headers:{Origin:origin}});

@@ -4,6 +4,7 @@ GitHub Pages: https://giovannipivatoo.github.io/cats/
 
 Ogni push su `main` pubblica automaticamente il sito tramite GitHub Actions.
 `node build-pages.mjs` genera `_site/` e collega le API al Worker Cloudflare esistente.
+La build autorizza quel backend anche nella Content Security Policy della pagina.
 Messaggi e personalizzazioni restano nello stesso database.
 
 Sito Cloudflare: https://meo-mao-plush.meo-mao-plush.workers.dev/
